@@ -18,19 +18,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download stable kernel source (7.2.5, 与 amlogic-kernel 成功构建源一致)
+        run: |
+          KVER=7.2.5
+          wget -q "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-${KVER}.tar.xz"
+          tar -xf "linux-${KVER}.tar.xz"
+          mv "linux-${KVER}" linux
+
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison flex libssl-dev libelf-dev \
-            dwarves kmod cpio zstd lz4
+          sudo apt-get install -y bc bison flex libssl-dev libelf-dev dwarves
 
-      - name: Configure kernel (x86_64_defconfig + kvm_guest + vps fragment)
+      - name: Configure kernel (x86_64_defconfig + kvm_guest + amd64 fragment)
+        working-directory: linux
         run: |
           make x86_64_defconfig kvm_guest.config
-          ./scripts/kconfig/merge_config.sh -m .config kernel-config/amd64.fragment
+          ./scripts/kconfig/merge_config.sh -m .config ../kernel-config/amd64.fragment
           make ARCH=x86_64 olddefconfig
 
       - name: Apply kernel sign
+        working-directory: linux
         run: |
           SIGN="${{ github.event.inputs.kernel_sign }}"
           ./scripts/config --disable CONFIG_LOCALVERSION_AUTO
@@ -40,33 +48,30 @@ jobs:
           make ARCH=x86_64 olddefconfig
           echo "kernelrelease = $(make ARCH=x86_64 kernelrelease LOCALVERSION=)"
 
-      - name: Build bzImage / modules
+      - name: Build bzImage (全内建, MODULES=n, 无模块)
+        working-directory: linux
         run: |
           make ARCH=x86_64 LOCALVERSION= -j$(nproc) bzImage
 
       - name: Package (tar.gz + deb)
         run: |
-          KVER=$(make ARCH=x86_64 kernelrelease LOCALVERSION=)
+          KVER=$(cd linux && make ARCH=x86_64 kernelrelease LOCALVERSION=)
           PKG="vps-kernel-${KVER}"
 
-          # --- tar.gz ---
-          mkdir -p "${PKG}/modules"
-          cp arch/x86/boot/bzImage "${PKG}/"
-          cp -r modules-out/lib/modules/"${KVER}" "${PKG}/modules/" || true
-          cp .config "${PKG}/kernel.config"
+          # --- tar.gz (全内建内核, 仅 bzImage + config) ---
+          mkdir -p "${PKG}"
+          cp linux/arch/x86/boot/bzImage "${PKG}/"
+          cp linux/.config "${PKG}/kernel.config"
           tar -czf "${PKG}.tar.gz" "${PKG}"
 
           # --- deb (linux-image 布局) ---
           DEB="linux-image-${KVER}"
           mkdir -p "${DEB}/DEBIAN" \
                    "${DEB}/boot" \
-                   "${DEB}/lib/modules/${KVER}" \
                    "${DEB}/usr/share/doc/${DEB}"
-          cp arch/x86/boot/bzImage "${DEB}/boot/vmlinuz-${KVER}"
-          cp System.map            "${DEB}/boot/System.map-${KVER}"
-          cp .config               "${DEB}/boot/config-${KVER}"
-          cp -r modules-out/lib/modules/"${KVER}"* "${DEB}/lib/modules/${KVER}/" || true
-          rm -f "${DEB}/lib/modules/${KVER}/build" "${DEB}/lib/modules/${KVER}/source"
+          cp linux/arch/x86/boot/bzImage "${DEB}/boot/vmlinuz-${KVER}"
+          cp linux/System.map            "${DEB}/boot/System.map-${KVER}"
+          cp linux/.config               "${DEB}/boot/config-${KVER}"
 
           cat > "${DEB}/DEBIAN/control" << EOF
           Package: linux-image-${KVER}
@@ -83,7 +88,7 @@ jobs:
           cat > "${DEB}/DEBIAN/postinst" << EOF
           #!/bin/sh
           set -e
-          depmod -a ${KVER} 2>/dev/null || true
+          # 全内建内核无模块, 无需 depmod
           # grub 引导的机器:update-grub 会自动发现新内核
           if command -v update-grub >/dev/null 2>&1; then
               update-grub || true
@@ -94,6 +99,14 @@ jobs:
           dpkg-deb --root-owner-group --build "${DEB}" "${DEB}.deb"
           echo "PKG_TAR=${PKG}.tar.gz" >> $GITHUB_ENV
           echo "PKG_DEB=${DEB}.deb"   >> $GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-package
+          path: |
+            ${{ env.PKG_TAR }}
+            ${{ env.PKG_DEB }}
 
       - name: Release
         uses: softprops/action-gh-release@v2
