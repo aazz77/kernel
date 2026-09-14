@@ -1,7 +1,7 @@
 # KVM VPS (x86_64) 内核片段 — 叠加在 x86_64_defconfig + kvm_guest.config 之上
 # 用法:
 #   make x86_64_defconfig kvm_guest.config
-#   ./scripts/kconfig/merge_config.sh -m .config kernel-config/vps.fragment
+#   ./scripts/kconfig/merge_config.sh -m .config kernel-config/amd64.fragment
 #   make ARCH=x86_64 olddefconfig
 # 注意: x86_64_defconfig 的 netfilter 覆盖远少于 arm64 defconfig,
 #       ufw/nexa 依赖的 xt/nft 表达式必须在这里全量补齐(已按 ufw 报错逐项核对)
