@@ -1,0 +1,95 @@
+# slim-patterns.txt — 精简清单(从 Debian 官方 amd64 config 裁掉的内容)
+# 语法: 每行一个 CONFIG 符号, 行内 # 后为注释; 尾部带 * 表示前缀匹配。
+# 只会禁用 base config 中实际存在的符号; 删掉某行后重新运行
+# gen-slim-fragment.py 即可恢复该类功能。
+#
+# 前提假设: x86_64 桌面物理机, 无 TV 卡/触摸屏/USB Gadget/Waydroid。
+# 保留: ext4/btrfs/xfs/vfat/exfat/ntfs3/fuse/squashfs/udf, NFS/CIFS, KVM,
+#       HDA+USB 声卡, USB 摄像头(UVC), Intel/Realtek/MediaTek/Atheros 常见网卡。
+
+# ===== 调试信息(构建时间大头) =====
+# DEBUG_INFO_NONE=y 在生成器的 OVERRIDES 里固定写入, 此处无需列
+
+# ===== 虚拟化: 只保留 KVM host, 砍 Xen guest/backend =====
+XEN*
+
+# ===== 媒体: 只留 USB 摄像头, 砍 PCI/平台 TV 卡、DVB、模拟电视、SDR、收音机、红外遥控 =====
+MEDIA_PCI_SUPPORT
+MEDIA_PLATFORM_SUPPORT
+MEDIA_TEST_SUPPORT
+MEDIA_SDR_SUPPORT
+MEDIA_DIGITAL_TV_SUPPORT
+MEDIA_ANALOG_TV_SUPPORT
+MEDIA_PARPORT_SUPPORT
+DVB_NET
+RADIO_ADAPTERS
+RC_CORE
+CAN*
+
+# ===== 声卡: 砍 SoC codec 驱动(桌面无用), 留 HDA/USB =====
+SND_SOC*
+
+# ===== 文件系统: 砍冷门/集群 FS, 留常用 + NFS/CIFS =====
+ADFS_FS
+AFFS_FS
+AFS_FS
+BEFS_FS
+BFS_FS
+EFS_FS
+EROFS_FS
+HFS_FS
+HFSPLUS_FS
+HPFS_FS
+JFS_FS
+MINIX_FS
+NTFS_FS
+OMFS_FS
+ORANGEFS_FS
+QNX4FS_FS
+QNX6FS_FS
+ROMFS_FS
+SYSV_FS
+UFS_FS
+VXFS_FS
+9P_FS
+NET_9P
+CRAMFS
+GFS2_FS
+OCFS2_FS
+CEPH_LIB
+SMB_SERVER
+# MTD/UBI/JFFS2: 桌面 x86 无 SPI NOR 直访需求
+MTD*
+
+# ===== 企业级网络/存储(iSCSI offload、FC HBA、RDMA、Zigbee、NFC、老串口线) =====
+INFINIBAND*
+BE2ISCSI
+BNX2ISCSI
+QEDI
+SCSI_QLA_FC
+SCSI_QLA_ISCSI
+SCSI_LPFC
+SCSI_BFA_FC
+SCSI_BNX2_ISCSI
+SCSI_CXGB3_ISCSI
+SCSI_CXGB4_ISCSI
+FCOE
+LIBFC
+LIBFCOE
+IEEE802154*
+NFC*
+CAIF*
+HAMRADIO
+ISDN*
+SLIP
+IPMI*
+
+# ===== 桌面用不到的大块头 =====
+STAGING
+IIO
+INPUT_TOUCHSCREEN
+TOUCHSCREEN*
+USB_GADGET
+ANDROID_BINDER_IPC*
+DRM_GMA500
+KUNIT*
