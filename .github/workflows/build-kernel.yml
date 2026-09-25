@@ -35,8 +35,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison flex libssl-dev libelf-dev \
-            dwarves kmod cpio zstd lz4 dpkg-dev fakeroot openssl
+          sudo apt-get install -y build-essential debhelper bc bison flex \
+            libssl-dev libelf-dev libdw-dev dwarves kmod cpio zstd lz4 \
+            dpkg-dev fakeroot openssl
 
       - name: Configure kernel (Debian base + slim-desktop fragment)
         working-directory: linux
@@ -71,7 +72,12 @@ jobs:
         run: |
           KVER=$(make kernelrelease LOCALVERSION=)
           echo "KVER=${KVER}" >> $GITHUB_ENV
-          make -j"$(nproc)" LOCALVERSION= bindeb-pkg KDEB_PKGVERSION="${KVER}-1"
+          # DPKG_FLAGS=-d: 跳过 dpkg 构建依赖检查。
+          # mkdebian 要求 debhelper-compat (= 12), Ubuntu noble 的 debhelper 13
+          # 只 Provides (= 13), 该依赖 apt 永远无法满足, 只能 -d 绕过;
+          # 实际构建依赖(debhelper/libdw-dev/bc/bison/flex...)已在上面装齐。
+          make -j"$(nproc)" LOCALVERSION= bindeb-pkg \
+            KDEB_PKGVERSION="${KVER}-1" DPKG_FLAGS="-d"
           ls -l ../*.deb
 
       - name: Collect artifacts
