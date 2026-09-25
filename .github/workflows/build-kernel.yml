@@ -83,8 +83,8 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir -p out
-          cp ../*linux-image*${{ env.KVER }}*deb out/ 2>/dev/null || cp ../*linux-image*.deb out/
-          cp ../*linux-headers*${{ env.KVER }}*deb out/ 2>/dev/null || cp ../*linux-headers*.deb out/
+          cp ./*linux-image*${{ env.KVER }}*.deb out/ 2>/dev/null || cp ./*linux-image*.deb out/
+          cp ./*linux-headers*${{ env.KVER }}*.deb out/ 2>/dev/null || cp ./*linux-headers*.deb out/
           cp linux/.config "out/config-${{ env.KVER }}"
           ls -l out/
 
