@@ -13,6 +13,14 @@ on:
         required: false
         default: ''
         type: string
+      profile:
+        description: '内核 profile'
+        required: true
+        default: 'desktop'
+        type: choice
+        options:
+          - desktop
+          - kvm-guest
 
 permissions:
   contents: write
@@ -39,12 +47,13 @@ jobs:
             libssl-dev libelf-dev libdw-dev dwarves kmod cpio zstd lz4 \
             dpkg-dev fakeroot openssl
 
-      - name: Configure kernel (Debian base + slim-desktop fragment)
+      - name: Configure kernel (Debian base + profile fragment)
         working-directory: linux
         run: |
+          PROFILE="${{ github.event.inputs.profile }}"
           cp ../kernel-config/config-7.1.8+deb13-amd64 .config
           ./scripts/kconfig/merge_config.sh -m .config \
-            ../kernel-config/slim-desktop.fragment
+            "../kernel-config/${PROFILE}.fragment"
           # 保险: 清掉可能的发行版证书路径(vanilla 树不存在该文件会构建失败)
           ./scripts/config --set-str SYSTEM_TRUSTED_KEYS ""
           ./scripts/config --set-str SYSTEM_REVOCATION_KEYS ""
@@ -58,8 +67,18 @@ jobs:
           echo "== 设值项验证 =="
           grep -q "^CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y" .config \
             || { echo "!! THP madvise 未生效"; exit 1; }
+          if [ "$PROFILE" = "kvm-guest" ]; then
+            for sym in CONFIG_KVM= CONFIG_DRM_I915= CONFIG_ATA= \
+                       CONFIG_WLAN_VENDOR_INTEL= CONFIG_BT= \
+                       CONFIG_SOUND= CONFIG_MEDIA_SUPPORT=; do
+              if grep -q "^${sym}" .config; then echo "!! guest 未精简: ${sym}"; exit 1; fi
+            done
+            for sym in CONFIG_VIRTIO_BLK=y CONFIG_VIRTIO_NET=y CONFIG_SCSI_VIRTIO=y \
+                       CONFIG_DRM_VIRTIO_GPU=y CONFIG_KVM_GUEST=y; do
+              grep -q "^${sym}" .config || { echo "!! guest 缺少: ${sym}"; exit 1; }
+            done
+          fi
           echo "CONFIG_EXT4_FS=$(grep '^CONFIG_EXT4_FS=' .config)"
-          echo "CONFIG_USB_VIDEO_CLASS=$(grep '^CONFIG_USB_VIDEO_CLASS=' .config || echo m*未启用*)"
 
       - name: Apply kernel sign (写入 CONFIG_LOCALVERSION, 影响 uname -r)
         working-directory: linux
@@ -94,6 +113,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: kernel-x64
+          # 按 profile 分 tag, 避免同版本号的 desktop/guest deb 互相覆盖
+          tag_name: kernel-x64-${{ github.event.inputs.profile }}
           files: |
             out/*
