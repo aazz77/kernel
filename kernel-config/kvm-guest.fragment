@@ -1,6 +1,6 @@
 # slim-desktop.fragment — x64 Debian 13 桌面精简
 # 由 gen-slim-fragment.py 自动生成, 精简项定义见 slim-patterns.txt
-# base: config-7.1.8+deb13-amd64 (启用符号 7026, 禁用 725)
+# base: config-7.1.8+deb13-amd64 (启用符号 7026, 禁用 724)
 
 # ---- 固定覆盖 ----
 CONFIG_DEBUG_INFO_NONE=y
@@ -206,17 +206,34 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_HPFS_FS] (1) ----
 # CONFIG_HPFS_FS is not set
 
-# ---- [CONFIG_HYPERV*] (11) ----
+# ---- [CONFIG_HYPERV] (1) ----
 # CONFIG_HYPERV is not set
-# CONFIG_HYPERVISOR_GUEST is not set
+
+# ---- [CONFIG_HYPERV_BALLOON] (1) ----
 # CONFIG_HYPERV_BALLOON is not set
+
+# ---- [CONFIG_HYPERV_IOMMU] (1) ----
 # CONFIG_HYPERV_IOMMU is not set
+
+# ---- [CONFIG_HYPERV_KEYBOARD] (1) ----
 # CONFIG_HYPERV_KEYBOARD is not set
+
+# ---- [CONFIG_HYPERV_NET] (1) ----
 # CONFIG_HYPERV_NET is not set
+
+# ---- [CONFIG_HYPERV_STORAGE] (1) ----
 # CONFIG_HYPERV_STORAGE is not set
+
+# ---- [CONFIG_HYPERV_TIMER] (1) ----
 # CONFIG_HYPERV_TIMER is not set
+
+# ---- [CONFIG_HYPERV_UTILS] (1) ----
 # CONFIG_HYPERV_UTILS is not set
+
+# ---- [CONFIG_HYPERV_VMBUS] (1) ----
 # CONFIG_HYPERV_VMBUS is not set
+
+# ---- [CONFIG_HYPERV_VSOCKETS] (1) ----
 # CONFIG_HYPERV_VSOCKETS is not set
 
 # ---- [CONFIG_IEEE802154*] (11) ----
@@ -915,6 +932,10 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 CONFIG_TRANSPARENT_HUGEPAGE=y
 CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
 # CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS is not set
+CONFIG_HYPERVISOR_GUEST=y
+CONFIG_PARAVIRT=y
+CONFIG_KVM_GUEST=y
+CONFIG_PARAVIRT_SPINLOCKS=y
 CONFIG_DRM=y
 CONFIG_SCSI=y
 CONFIG_VIRTIO_BLK=y

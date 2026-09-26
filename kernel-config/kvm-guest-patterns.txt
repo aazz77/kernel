@@ -107,10 +107,20 @@ CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=n
 # ============================================================
 
 # 内核本身是 guest: 不要 hypervisor host 能力(精确列出, 避免 KVM* 误伤 KVM_GUEST)
+# 注意: 不能用 HYPERV* 前缀 — 会误伤 CONFIG_HYPERVISOR_GUEST, 连坐关掉 PARAVIRT/KVM_GUEST
 KVM
 KVM_INTEL
 KVM_AMD
-HYPERV*
+HYPERV
+HYPERV_TIMER
+HYPERV_VMBUS
+HYPERV_IOMMU
+HYPERV_NET
+HYPERV_KEYBOARD
+HYPERV_VSOCKETS
+HYPERV_STORAGE
+HYPERV_UTILS
+HYPERV_BALLOON
 
 # 显卡: 只留 virtio-gpu, 砍物理 GPU 驱动
 DRM_I915
@@ -147,6 +157,11 @@ MMC*
 USB_PRINTER
 
 # ---- guest 显式设置(核心驱动内建, 不依赖 initramfs 时序) ----
+# guest 身份链显式钉死: HYPERVISOR_GUEST → PARAVIRT → KVM_GUEST(默认 y 但依赖前两者)
+HYPERVISOR_GUEST=y
+PARAVIRT=y
+KVM_GUEST=y
+PARAVIRT_SPINLOCKS=y
 # 注意: kconfig 不会自动把依赖升级为 y, base 里 DRM/SCSI 是 =m,
 # 必须先把核心子系统拉成 =y, 否则 VIRTIO_GPU/SCSI_VIRTIO 会被静默降回 =m
 DRM=y
