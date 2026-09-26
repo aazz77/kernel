@@ -1,0 +1,158 @@
+# slim-patterns.txt — 精简清单(从 Debian 官方 amd64 config 裁掉的内容)
+# 语法: 每行一个 CONFIG 符号, 行内 # 后为注释; 尾部带 * 表示前缀匹配。
+# 只会禁用 base config 中实际存在的符号; 删掉某行后重新运行
+# gen-slim-fragment.py 即可恢复该类功能。
+#
+# 前提假设: x86_64 桌面物理机, 无 TV 卡/触摸屏/USB Gadget/Waydroid。
+# 保留: ext4/btrfs/xfs/vfat/exfat/ntfs3/fuse/squashfs/udf, NFS/CIFS, KVM,
+#       HDA+USB 声卡, USB 摄像头(UVC), Intel/Realtek/MediaTek/Atheros 常见网卡。
+
+# ===== 调试信息(构建时间大头) =====
+# DEBUG_INFO_NONE=y 在生成器的 OVERRIDES 里固定写入, 此处无需列
+
+# ===== 虚拟化: 只保留 KVM host, 砍 Xen guest/backend =====
+XEN*
+
+# ===== 媒体: 只留 USB 摄像头, 砍 PCI/平台 TV 卡、DVB、模拟电视、SDR、收音机、红外遥控 =====
+MEDIA_PCI_SUPPORT
+MEDIA_PLATFORM_SUPPORT
+MEDIA_TEST_SUPPORT
+MEDIA_SDR_SUPPORT
+MEDIA_DIGITAL_TV_SUPPORT
+MEDIA_ANALOG_TV_SUPPORT
+MEDIA_PARPORT_SUPPORT
+DVB_NET
+RADIO_ADAPTERS
+RC_CORE
+CAN*
+
+# ===== 声卡: 砍 SoC codec 驱动(桌面无用), 留 HDA/USB =====
+SND_SOC*
+
+# ===== 文件系统: 砍冷门/集群 FS, 留常用 + NFS/CIFS =====
+ADFS_FS
+AFFS_FS
+AFS_FS
+BEFS_FS
+BFS_FS
+EFS_FS
+EROFS_FS
+HFS_FS
+HFSPLUS_FS
+HPFS_FS
+JFS_FS
+MINIX_FS
+NTFS_FS
+OMFS_FS
+ORANGEFS_FS
+QNX4FS_FS
+QNX6FS_FS
+ROMFS_FS
+SYSV_FS
+UFS_FS
+VXFS_FS
+9P_FS
+NET_9P
+CRAMFS
+GFS2_FS
+OCFS2_FS
+CEPH_LIB
+SMB_SERVER
+# MTD/UBI/JFFS2: 桌面 x86 无 SPI NOR 直访需求
+MTD*
+
+# ===== 企业级网络/存储(iSCSI offload、FC HBA、RDMA、Zigbee、NFC、老串口线) =====
+INFINIBAND*
+BE2ISCSI
+BNX2ISCSI
+QEDI
+SCSI_QLA_FC
+SCSI_QLA_ISCSI
+SCSI_LPFC
+SCSI_BFA_FC
+SCSI_BNX2_ISCSI
+SCSI_CXGB3_ISCSI
+SCSI_CXGB4_ISCSI
+FCOE
+LIBFC
+LIBFCOE
+IEEE802154*
+NFC*
+CAIF*
+HAMRADIO
+ISDN*
+SLIP
+IPMI*
+
+# ===== 桌面用不到的大块头 =====
+STAGING
+IIO
+INPUT_TOUCHSCREEN
+TOUCHSCREEN*
+USB_GADGET
+ANDROID_BINDER_IPC*
+DRM_GMA500
+KUNIT*
+
+# ===== 显式设置(设值行, 含 = 生效) =====
+# THP 改为 madvise 模式(Debian 官方是 always)
+CONFIG_TRANSPARENT_HUGEPAGE=y
+CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
+CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=n
+
+# ============================================================
+# 以下为 KVM guest 附加项(在桌面精简基础上叠加)
+# 假设: 跑在 KVM/QEMU 里, 磁盘 virtio, 网卡 virtio(或 e1000 模拟),
+#      显卡 virtio-gpu, 音频 intel-hda 模拟或 virtio-sound
+# ============================================================
+
+# 内核本身是 guest: 不要 hypervisor host 能力(精确列出, 避免 KVM* 误伤 KVM_GUEST)
+KVM
+KVM_INTEL
+KVM_AMD
+HYPERV*
+
+# 显卡: 只留 virtio-gpu, 砍物理 GPU 驱动
+DRM_I915
+DRM_XE
+DRM_AMDGPU*
+DRM_NOUVEAU*
+DRM_VMW*
+
+# 无线/蓝牙: guest 无物理射频
+WLAN_VENDOR_*
+BT*
+
+# SATA/AHCI: 磁盘一律 virtio-blk / virtio-scsi(如需 SATA 模拟盘删掉下面几行)
+ATA
+ATA_*
+SATA_*
+PATA_*
+AHCI_*
+
+# headless 无桌面环境: 音频整棵砍掉(SOUND 关了 SND_* 全部失效)
+SOUND
+
+# 媒体采集: 无桌面, 摄像头/采集卡/DVB 全部不需要
+# (要 USB 摄像头直通给 VM 用, 删掉这行即可恢复 UVC)
+MEDIA_SUPPORT
+
+# headless 用不到的外设
+PARPORT
+GAMEPORT
+INPUT_JOYDEV
+FIREWIRE
+AGP
+MMC*
+USB_PRINTER
+
+# ---- guest 显式设置(核心驱动内建, 不依赖 initramfs 时序) ----
+SCSI=y
+VIRTIO_BLK=y
+VIRTIO_NET=y
+SCSI_VIRTIO=y
+VIRTIO_BALLOON=y
+VIRTIO_INPUT=y
+HW_RANDOM_VIRTIO=y
+DRM_VIRTIO_GPU=y
+FW_CFG_SYSFS=y

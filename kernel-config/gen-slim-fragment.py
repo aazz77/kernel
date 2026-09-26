@@ -103,14 +103,15 @@ def main():
         f.write("\n# ---- 固定覆盖 ----\n")
         for k, v in OVERRIDES:
             f.write("%s=%s\n" % (k, v) if v else "# %s is not set\n" % k)
-        if set_lines:
-            f.write("\n# ---- 显式设置(来自 slim-patterns.txt 设值行) ----\n")
-            for k, v in set_lines:
-                f.write("%s=%s\n" % (k, v) if v else "# %s is not set\n" % k)
         for p, syms in by_pattern.items():
             f.write("\n# ---- [%s] (%d) ----\n" % (p, len(syms)))
             for s in syms:
                 f.write("# %s is not set\n" % s)
+        # 设值行放最后: merge_config 后写者生效, 确保覆盖任何同类禁用行
+        if set_lines:
+            f.write("\n# ---- 显式设置(来自 patterns 设值行, 最后生效) ----\n")
+            for k, v in set_lines:
+                f.write("%s=%s\n" % (k, v) if v else "# %s is not set\n" % k)
 
     print("base symbols: %d, disabled: %d -> %s" % (len(enabled), len(matched), out_file))
 
