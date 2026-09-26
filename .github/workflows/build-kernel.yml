@@ -55,6 +55,9 @@ jobs:
                      CONFIG_INFINIBAND= CONFIG_GFS2_FS=; do
             if grep -q "^${sym}" .config; then echo "!! 未精简: ${sym}"; exit 1; fi
           done
+          echo "== 设值项验证 =="
+          grep -q "^CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y" .config \
+            || { echo "!! THP madvise 未生效"; exit 1; }
           echo "CONFIG_EXT4_FS=$(grep '^CONFIG_EXT4_FS=' .config)"
           echo "CONFIG_USB_VIDEO_CLASS=$(grep '^CONFIG_USB_VIDEO_CLASS=' .config || echo m*未启用*)"
 
