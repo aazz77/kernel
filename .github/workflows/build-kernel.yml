@@ -74,7 +74,8 @@ jobs:
               if grep -q "^${sym}" .config; then echo "!! guest 未精简: ${sym}"; exit 1; fi
             done
             for sym in CONFIG_VIRTIO_BLK=y CONFIG_VIRTIO_NET=y CONFIG_SCSI_VIRTIO=y \
-                       CONFIG_DRM_VIRTIO_GPU=y CONFIG_KVM_GUEST=y; do
+                       CONFIG_DRM_VIRTIO_GPU=y CONFIG_KVM_GUEST=y \
+                       CONFIG_PARAVIRT=y CONFIG_HYPERVISOR_GUEST=y; do
               grep -q "^${sym}" .config || { echo "!! guest 缺少: ${sym}"; exit 1; }
             done
           fi
