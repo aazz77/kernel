@@ -1,4 +1,4 @@
-name: Build Kernel x64 (Debian 13 desktop)
+name: Build Kernel x64
 
 on:
   workflow_dispatch: # 手动触发
@@ -6,12 +6,12 @@ on:
       version:
         description: "Kernel version (e.g. 7.1.8)"
         required: true
-        default: '7.1.8'
+        default: '7.2.8'
         type: string
       kernel_sign:
         description: 'LOCALVERSION 后缀(可留空, 影响 uname -r)'
         required: false
-        default: ''
+        default: 'alice'
         type: string
       profile:
         description: '内核 profile'
