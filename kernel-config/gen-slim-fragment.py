@@ -47,16 +47,29 @@ def load_base(path):
 
 
 def load_patterns(path):
-    """patterns 允许省略 CONFIG_ 前缀, 统一补全"""
-    pats = []
+    """patterns 允许省略 CONFIG_ 前缀, 统一补全。
+    两类行:
+      - 禁用行: 纯符号名, 可带 * 前缀通配 -> "# CONFIG_X is not set"
+      - 设值行: 含 '=', 如 CONFIG_X=y / CONFIG_X=n (=n 归一化为 not set)
+    返回 (disable_pats, set_lines)"""
+    disable_pats, set_lines = [], []
     with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.split("#", 1)[0].strip()
-            if line:
-                if not line.startswith("CONFIG_"):
-                    line = "CONFIG_" + line
-                pats.append(line)
-    return pats
+            if not line:
+                continue
+            if "=" in line:
+                sym, _, val = line.partition("=")
+                sym = sym.strip()
+                if not sym.startswith("CONFIG_"):
+                    sym = "CONFIG_" + sym
+                if val.strip().lower() == "n":
+                    set_lines.append((sym, None))
+                else:
+                    set_lines.append((sym, val.strip()))
+            else:
+                disable_pats.append("CONFIG_" + line if not line.startswith("CONFIG_") else line)
+    return disable_pats, set_lines
 
 
 def main():
@@ -66,7 +79,7 @@ def main():
     out_file = args[2] if len(args) > 2 else os.path.join(HERE, "slim-desktop.fragment")
 
     enabled = load_base(base_file)
-    pats = load_patterns(pat_file)
+    pats, set_lines = load_patterns(pat_file)
 
     matched = {}  # symbol -> pattern that disabled it
     for sym in enabled:
@@ -90,6 +103,10 @@ def main():
         f.write("\n# ---- 固定覆盖 ----\n")
         for k, v in OVERRIDES:
             f.write("%s=%s\n" % (k, v) if v else "# %s is not set\n" % k)
+        if set_lines:
+            f.write("\n# ---- 显式设置(来自 slim-patterns.txt 设值行) ----\n")
+            for k, v in set_lines:
+                f.write("%s=%s\n" % (k, v) if v else "# %s is not set\n" % k)
         for p, syms in by_pattern.items():
             f.write("\n# ---- [%s] (%d) ----\n" % (p, len(syms)))
             for s in syms:
