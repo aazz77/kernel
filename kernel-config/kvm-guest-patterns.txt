@@ -147,6 +147,9 @@ MMC*
 USB_PRINTER
 
 # ---- guest 显式设置(核心驱动内建, 不依赖 initramfs 时序) ----
+# 注意: kconfig 不会自动把依赖升级为 y, base 里 DRM/SCSI 是 =m,
+# 必须先把核心子系统拉成 =y, 否则 VIRTIO_GPU/SCSI_VIRTIO 会被静默降回 =m
+DRM=y
 SCSI=y
 VIRTIO_BLK=y
 VIRTIO_NET=y
