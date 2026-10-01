@@ -177,14 +177,30 @@ jobs:
       - name: Merge headers into image deb (合成单包)
         working-directory: linux
         run: |
-          IMG=$(ls ../linux-image-"$KVER"_*.deb)
-          HDR=$(ls ../linux-headers-"$KVER"_*.deb)
+          # 不依赖 $KVER 精确拼接, 直接用通配符找刚生成的 deb
+          IMG=$(ls -t ../linux-image*.deb | head -n1)
+          HDR=$(ls -t ../linux-headers*.deb | head -n1)
+          echo "IMG=${IMG}"
+          echo "HDR=${HDR}"
+          test -n "$IMG" || { echo "!! 找不到 image deb"; ls -l ..; exit 1; }
+          test -n "$HDR" || { echo "!! 找不到 headers deb"; ls -l ..; exit 1; }
+
+          # 从文件名反解真实 KVER (deb 命名: linux-image-<kver>_<ver>_amd64.deb)
+          KVER=$(dpkg-deb -f "$IMG" Version | cut -d'-' -f1)   # 或见下方说明
+          echo "KVER=${KVER}" >>$GITHUB_ENV
+
           rm -rf .debmerge .debhdr && mkdir .debmerge .debhdr
           dpkg-deb -R "$IMG" .debmerge
           dpkg-deb -R "$HDR" .debhdr
+
+          # headers 数据在 .debhdr/usr/... 与 image 包无路径冲突, 直接拷入
           cp -a .debhdr/usr/. .debmerge/usr/
+
+          # control 补 Provides, 声明本包同时提供 headers
+          HDRPKG=$(dpkg-deb -f "$HDR" Package)   # linux-headers-xxx
           grep -q '^Provides:' .debmerge/DEBIAN/control \
-            || sed -i "/^Description:/i Provides: linux-headers-${KVER}" .debmerge/DEBIAN/control
+            || sed -i "/^Description:/i Provides: ${HDRPKG}" .debmerge/DEBIAN/control
+
           rm "$HDR"
           dpkg-deb --root-owner-group --build .debmerge "$IMG"
           rm -rf .debmerge .debhdr
@@ -194,8 +210,6 @@ jobs:
         run: |
           mkdir -p out
           cp ./*linux-image*${{ env.KVER }}*.deb out/ 2>/dev/null || cp ./*linux-image*.deb out/
-          cp ./*linux-headers*${{ env.KVER }}*.deb out/ 2>/dev/null || true
-          cp linux/.config "out/config-${{ env.KVER }}"
           ls -l out/
 
       - name: Release
