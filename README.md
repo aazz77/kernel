@@ -8,11 +8,11 @@ x86_64 Debian 13 桌面内核编译仓库。基于 Debian 官方 `7.1.8+deb13-am
 .github/workflows/build-kernel.yml   # 编译 workflow (手动触发, 可选 profile)
 kernel-config/
   config-7.1.8+deb13-amd64           # Debian 官方 config 原件(base)
-  slim-patterns.txt                  # 桌面版精简清单
+  desktop-patterns.txt               # 桌面版精简清单
   kvm-guest-patterns.txt             # KVM guest 版精简清单(桌面精简 + guest 附加项)
   gen-slim-fragment.py               # 由 base + patterns 生成 fragment
-  slim-desktop.fragment              # 桌面版 fragment(已提交)
-  kvm-guest.fragment                 # KVM guest 版 fragment(已提交)
+  desktop.fragment                   # 桌面版 fragment(已提交, 文件名 = profile 名)
+  kvm-guest.fragment                 # KVM guest 版 fragment(已提交, 文件名 = profile 名)
 ```
 
 ## 用法
@@ -23,6 +23,7 @@ kernel-config/
    - **kernel_sign**: LOCALVERSION 后缀(可选)
    - **profile**: `desktop` = 物理桌面机 / `kvm-guest` = KVM 虚拟机 guest 内核
 3. 在 Release 页下载(按 profile 分 tag: `kernel-x64-desktop` / `kernel-x64-kvm-guest`)
+   - **单个 deb**:headers 已并入 image 包(control 声明 `Provides: linux-headers-<kver>`),一次 `dpkg -i` 全装完
 4. 本机安装:`sudo dpkg -i linux-image-*.deb`
    - initramfs 和 grub 由系统自带的 `/etc/kernel/postinst.d` 钩子(initramfs-tools + grub)自动处理,无需手动操作
 
@@ -55,11 +56,16 @@ kernel-config/
 
 ## 恢复某项功能 / 自定义设值
 
-编辑 `slim-patterns.txt`,然后重新生成 fragment:
+编辑 `desktop-patterns.txt`(或 `kvm-guest-patterns.txt`),然后重新生成 fragment:
 
 ```sh
+# 桌面版
 python3 kernel-config/gen-slim-fragment.py
+# KVM guest 版
+python3 kernel-config/gen-slim-fragment.py config-7.1.8+deb13-amd64 kvm-guest-patterns.txt kvm-guest.fragment
 ```
+
+注意: fragment 文件名必须等于 profile 名(`desktop.fragment` / `kvm-guest.fragment`),workflow 按 `kernel-config/${profile}.fragment` 查找。
 
 两种语法:
 

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""gen-slim-fragment.py — 从 Debian 官方 amd64 config 生成 slim-desktop.fragment
+"""gen-slim-fragment.py — 从 Debian 官方 amd64 config 生成 profile fragment(desktop / kvm-guest)
 
 用法(在仓库 kernel-config/ 目录或仓库根执行):
     python3 kernel-config/gen-slim-fragment.py [base_config] [patterns] [output]
 
 默认:
     base     = kernel-config/config-7.1.8+deb13-amd64
-    patterns = kernel-config/slim-patterns.txt
-    output   = kernel-config/slim-desktop.fragment
+    patterns = kernel-config/desktop-patterns.txt
+    output   = kernel-config/desktop.fragment
+(生成 kvm-guest 版: gen-slim-fragment.py <base> kvm-guest-patterns.txt kvm-guest.fragment)
 
 规则:
   - 只对 base config 中实际 =y/=m 的符号生成 "# CONFIG_X is not set"
@@ -75,8 +76,8 @@ def load_patterns(path):
 def main():
     args = sys.argv[1:]
     base_file = args[0] if len(args) > 0 else os.path.join(HERE, "config-7.1.8+deb13-amd64")
-    pat_file = args[1] if len(args) > 1 else os.path.join(HERE, "slim-patterns.txt")
-    out_file = args[2] if len(args) > 2 else os.path.join(HERE, "slim-desktop.fragment")
+    pat_file = args[1] if len(args) > 1 else os.path.join(HERE, "desktop-patterns.txt")
+    out_file = args[2] if len(args) > 2 else os.path.join(HERE, "desktop.fragment")
 
     enabled = load_base(base_file)
     pats, set_lines = load_patterns(pat_file)
@@ -97,8 +98,8 @@ def main():
         by_pattern.setdefault(p, []).append(sym)
 
     with open(out_file, "w", encoding="utf-8") as f:
-        f.write("# slim-desktop.fragment — x64 Debian 13 桌面精简\n")
-        f.write("# 由 gen-slim-fragment.py 自动生成, 精简项定义见 slim-patterns.txt\n")
+        f.write("# %s — x64 Debian 13 精简\n" % os.path.basename(out_file))
+        f.write("# 由 gen-slim-fragment.py 自动生成, 精简项定义见 %s\n" % os.path.basename(pat_file))
         f.write("# base: %s (启用符号 %d, 禁用 %d)\n" % (os.path.basename(base_file), len(enabled), len(matched)))
         f.write("\n# ---- 固定覆盖 ----\n")
         for k, v in OVERRIDES:
