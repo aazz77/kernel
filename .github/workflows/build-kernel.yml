@@ -103,11 +103,33 @@ jobs:
             KDEB_PKGVERSION="${KVER}-1" DPKG_FLAGS="-d"
           ls -l ../*.deb
 
+      - name: Merge headers into image deb (合成单包)
+        working-directory: linux
+        run: |
+          # bindeb-pkg 固定拆 image/headers 两包; 把 headers 数据树并进 image 包
+          # 重新打一个 deb: dpkg -i 一次装完, Release 只出一个文件
+          IMG=$(ls ../linux-image-"$KVER"_*.deb)
+          HDR=$(ls ../linux-headers-"$KVER"_*.deb)
+          rm -rf .debmerge .debhdr && mkdir .debmerge .debhdr
+          dpkg-deb -R "$IMG" .debmerge
+          dpkg-deb -R "$HDR" .debhdr
+          # headers 内容在 /usr/src/linux-headers-<kver> 等, 与 image 的
+          # /boot、/lib/modules、/usr/bin 无路径冲突, 直接拷入
+          cp -a .debhdr/usr/. .debmerge/usr/
+          # control 补 Provides, 声明本包同时提供 headers
+          grep -q '^Provides:' .debmerge/DEBIAN/control \
+            || sed -i "/^Description:/i Provides: linux-headers-${KVER}" .debmerge/DEBIAN/control
+          rm "$HDR"
+          dpkg-deb --root-owner-group --build .debmerge "$IMG"
+          rm -rf .debmerge .debhdr
+          ls -l ../*.deb
+
       - name: Collect artifacts
         run: |
           mkdir -p out
           cp ./*linux-image*${{ env.KVER }}*.deb out/ 2>/dev/null || cp ./*linux-image*.deb out/
-          cp ./*linux-headers*${{ env.KVER }}*.deb out/ 2>/dev/null || cp ./*linux-headers*.deb out/
+          # headers 已并入 image 包, 此步仅兜底; 不存在则跳过
+          cp ./*linux-headers*${{ env.KVER }}*.deb out/ 2>/dev/null || true
           cp linux/.config "out/config-${{ env.KVER }}"
           ls -l out/
 
