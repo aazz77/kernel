@@ -1,15 +1,15 @@
 name: Build Kernel x64
 
 on:
-  workflow_dispatch: # 手动触发
+  workflow_dispatch:
     inputs:
       version:
-        description: "Kernel version (e.g. 7.1.8)"
-        required: true
+        description: "Kernel version (留空则用默认 7.2.8, 无条件构建)"
+        required: false
         default: '7.2.8'
         type: string
       kernel_sign:
-        description: 'LOCALVERSION 后缀(可留空, 影响 uname -r)'
+        description: 'LOCALVERSION 后缀(可留空)'
         required: false
         default: 'alice'
         type: string
@@ -21,20 +21,89 @@ on:
         options:
           - desktop
           - kvm-guest
+  schedule:
+    - cron: '0 18 * * *'   # 每天 UTC 18:00 = 北京 2:00
 
 permissions:
   contents: write
 
+env:
+  MAJOR: "7.2"   # ★ 定时检测跟踪的大版本号, 改这里即可
+
 jobs:
+  check:
+    # ★ 只在定时触发时才做检测; 手动触发时整个 job 被 skip
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check latest kernel version
+        id: check
+        env:
+          MAJOR: ${{ env.MAJOR }}
+        run: |
+          LATEST=$(curl -fsSL https://www.kernel.org/releases.json \
+            | jq -r --arg pre "${MAJOR}." \
+              '[.releases[].version | select(startswith($pre))]'
+            | sort -V | tail -n1)
+
+          if [ -z "$LATEST" ]; then
+            echo "!! kernel.org 上没找到 ${MAJOR}.x 的版本"; exit 1
+          fi
+          echo "kernel.org ${MAJOR}.x 最新: ${LATEST}"
+
+          SAVED=""
+          [ -f LATEST_VERSION ] && SAVED=$(tr -d '[:space:]' < LATEST_VERSION)
+          echo "仓库已存版本: ${SAVED:-<无文件, 首次运行>}"
+
+          if [ "$(printf '%s\n%s\n' "$SAVED" "$LATEST" | sort -V | tail -n1)" = "$LATEST" ] \
+             && [ "$SAVED" != "$LATEST" ]; then
+            echo "发现新版本: ${SAVED:-无} -> ${LATEST}, 开始构建"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "无更新, 跳过构建"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${LATEST}" >> "$GITHUB_OUTPUT"
+
+      # ★ 只有定时检测发现新版本才写文件并 push
+      - name: Commit version file
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "${{ steps.check.outputs.version }}" > LATEST_VERSION
+          git add LATEST_VERSION
+          git commit -m "chore: update kernel version to ${{ steps.check.outputs.version }}"
+          git push
+
   build:
+    needs: check
+    # ★ 手动触发: check 为 skipped -> 无条件构建
+    # ★ 定时触发: check 通过且 changed=true -> 构建
+    if: >-
+      always() &&
+      (needs.check.result == 'skipped' || needs.check.outputs.changed == 'true')
     runs-on: ubuntu-24.04
     timeout-minutes: 300
+    env:
+      # 手动触发用 inputs.version (默认 7.2.8); 定时触发用 check 检测到的版本
+      KVERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || needs.check.outputs.version }}
+      PROFILE: ${{ github.event.inputs.profile || 'desktop' }}
+      SIGN: ${{ github.event.inputs.kernel_sign || 'alice' }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Download stable kernel source
         run: |
-          V="${{ github.event.inputs.version }}"
+          V="${KVERSION}"
           MAJOR="${V%%.*}"
           wget -q "https://cdn.kernel.org/pub/linux/kernel/v${MAJOR}.x/linux-${V}.tar.xz"
           tar -xf "linux-${V}.tar.xz"
@@ -45,33 +114,39 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential debhelper bc bison flex \
             libssl-dev libelf-dev libdw-dev dwarves kmod cpio zstd lz4 \
-            dpkg-dev fakeroot openssl
+            dpkg-dev fakeroot openssl jq
 
       - name: Configure kernel (Debian base + profile fragment)
         working-directory: linux
         run: |
-          PROFILE="${{ github.event.inputs.profile }}"
+          PROFILE="${PROFILE}"
           cp ../kernel-config/config-7.1.8+deb13-amd64 .config
           ./scripts/kconfig/merge_config.sh -m .config \
             "../kernel-config/${PROFILE}.fragment"
-          # 保险: 清掉可能的发行版证书路径(vanilla 树不存在该文件会构建失败)
           ./scripts/config --set-str SYSTEM_TRUSTED_KEYS ""
           ./scripts/config --set-str SYSTEM_REVOCATION_KEYS ""
           make olddefconfig
+
           echo "== 精简项验证(以下应全部无输出) =="
           for sym in CONFIG_DEBUG_INFO= CONFIG_XEN= CONFIG_STAGING= \
                      CONFIG_MEDIA_PCI_SUPPORT= CONFIG_SND_SOC= \
                      CONFIG_INFINIBAND= CONFIG_GFS2_FS=; do
-            if grep -q "^${sym}" .config; then echo "!! 未精简: ${sym}"; exit 1; fi
+            if grep -q "^${sym}" .config; then
+              echo "!! 未精简: ${sym}"; exit 1
+            fi
           done
+
           echo "== 设值项验证 =="
           grep -q "^CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y" .config \
             || { echo "!! THP madvise 未生效"; exit 1; }
+
           if [ "$PROFILE" = "kvm-guest" ]; then
             for sym in CONFIG_KVM= CONFIG_DRM_I915= CONFIG_ATA= \
                        CONFIG_WLAN_VENDOR_INTEL= CONFIG_BT= \
                        CONFIG_SOUND= CONFIG_MEDIA_SUPPORT=; do
-              if grep -q "^${sym}" .config; then echo "!! guest 未精简: ${sym}"; exit 1; fi
+              if grep -q "^${sym}" .config; then
+                echo "!! guest 未精简: ${sym}"; exit 1
+              fi
             done
             for sym in CONFIG_VIRTIO_BLK=y CONFIG_VIRTIO_NET=y CONFIG_SCSI_VIRTIO=y \
                        CONFIG_DRM_VIRTIO_GPU=y CONFIG_KVM_GUEST=y \
@@ -79,12 +154,12 @@ jobs:
               grep -q "^${sym}" .config || { echo "!! guest 缺少: ${sym}"; exit 1; }
             done
           fi
+
           echo "CONFIG_EXT4_FS=$(grep '^CONFIG_EXT4_FS=' .config)"
 
-      - name: Apply kernel sign (写入 CONFIG_LOCALVERSION, 影响 uname -r)
+      - name: Apply kernel sign
         working-directory: linux
         run: |
-          SIGN="${{ github.event.inputs.kernel_sign }}"
           ./scripts/config --disable CONFIG_LOCALVERSION_AUTO
           ./scripts/config --set-str CONFIG_LOCALVERSION "-${SIGN}"
           make olddefconfig
@@ -95,10 +170,6 @@ jobs:
         run: |
           KVER=$(make kernelrelease LOCALVERSION=)
           echo "KVER=${KVER}" >> $GITHUB_ENV
-          # DPKG_FLAGS=-d: 跳过 dpkg 构建依赖检查。
-          # mkdebian 要求 debhelper-compat (= 12), Ubuntu noble 的 debhelper 13
-          # 只 Provides (= 13), 该依赖 apt 永远无法满足, 只能 -d 绕过;
-          # 实际构建依赖(debhelper/libdw-dev/bc/bison/flex...)已在上面装齐。
           make -j"$(nproc)" LOCALVERSION= bindeb-pkg \
             KDEB_PKGVERSION="${KVER}-1" DPKG_FLAGS="-d"
           ls -l ../*.deb
@@ -106,17 +177,12 @@ jobs:
       - name: Merge headers into image deb (合成单包)
         working-directory: linux
         run: |
-          # bindeb-pkg 固定拆 image/headers 两包; 把 headers 数据树并进 image 包
-          # 重新打一个 deb: dpkg -i 一次装完, Release 只出一个文件
           IMG=$(ls ../linux-image-"$KVER"_*.deb)
           HDR=$(ls ../linux-headers-"$KVER"_*.deb)
           rm -rf .debmerge .debhdr && mkdir .debmerge .debhdr
           dpkg-deb -R "$IMG" .debmerge
           dpkg-deb -R "$HDR" .debhdr
-          # headers 内容在 /usr/src/linux-headers-<kver> 等, 与 image 的
-          # /boot、/lib/modules、/usr/bin 无路径冲突, 直接拷入
           cp -a .debhdr/usr/. .debmerge/usr/
-          # control 补 Provides, 声明本包同时提供 headers
           grep -q '^Provides:' .debmerge/DEBIAN/control \
             || sed -i "/^Description:/i Provides: linux-headers-${KVER}" .debmerge/DEBIAN/control
           rm "$HDR"
@@ -128,7 +194,6 @@ jobs:
         run: |
           mkdir -p out
           cp ./*linux-image*${{ env.KVER }}*.deb out/ 2>/dev/null || cp ./*linux-image*.deb out/
-          # headers 已并入 image 包, 此步仅兜底; 不存在则跳过
           cp ./*linux-headers*${{ env.KVER }}*.deb out/ 2>/dev/null || true
           cp linux/.config "out/config-${{ env.KVER }}"
           ls -l out/
@@ -136,7 +201,6 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          # 按 profile 分 tag, 避免同版本号的 desktop/guest deb 互相覆盖
           tag_name: kernel-x64
           files: |
             out/*
