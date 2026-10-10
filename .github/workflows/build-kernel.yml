@@ -29,6 +29,7 @@ permissions:
 
 env:
   MAJOR: "7.2"   # ★ 定时检测跟踪的大版本号, 改这里即可
+  FIXED_PKG: "linux-kernel-amd64"   # ★ 固定包名，以后升级都用这个
 
 jobs:
   check:
@@ -182,10 +183,12 @@ jobs:
             KDEB_PKGVERSION="${KVER}-1" DPKG_FLAGS="-d"
           ls -l ../*.deb
 
-      - name: Merge headers into image deb (合成单包)
+      - name: Merge headers into image deb (合成单包 + 固定包名)
         working-directory: linux
         run: |
-          # 不依赖 $KVER 精确拼接, 直接用通配符找刚生成的 deb
+          # 固定包名（从 env 读取，也可在这里直接写死）
+          FIXED_PKG="${{ env.FIXED_PKG }}"
+
           IMG=$(ls -t ../linux-image*.deb | head -n1)
           HDR=$(ls -t ../linux-headers*.deb | head -n1)
           echo "IMG=${IMG}"
@@ -193,9 +196,10 @@ jobs:
           test -n "$IMG" || { echo "!! 找不到 image deb"; ls -l ..; exit 1; }
           test -n "$HDR" || { echo "!! 找不到 headers deb"; ls -l ..; exit 1; }
 
-          # 从文件名反解真实 KVER (deb 命名: linux-image-<kver>_<ver>_amd64.deb)
-          KVER=$(dpkg-deb -f "$IMG" Version | cut -d'-' -f1)   # 或见下方说明
-          echo "KVER=${KVER}" >>$GITHUB_ENV
+          # 真实版本号（用于文件名和 Version 字段）
+          REAL_VER=$(dpkg-deb -f "$IMG" Version)
+          echo "REAL_VER=${REAL_VER}"
+          echo "KVER=${REAL_VER%%-*}" >> $GITHUB_ENV
 
           rm -rf .debmerge .debhdr && mkdir .debmerge .debhdr
           dpkg-deb -R "$IMG" .debmerge
@@ -204,20 +208,32 @@ jobs:
           # headers 数据在 .debhdr/usr/... 与 image 包无路径冲突, 直接拷入
           cp -a .debhdr/usr/. .debmerge/usr/
 
-          # control 补 Provides, 声明本包同时提供 headers
-          HDRPKG=$(dpkg-deb -f "$HDR" Package)   # linux-headers-xxx
-          grep -q '^Provides:' .debmerge/DEBIAN/control \
-            || sed -i "/^Description:/i Provides: ${HDRPKG}" .debmerge/DEBIAN/control
+          # ===== 关键：强制改成固定包名 =====
+          sed -i "s/^Package:.*/Package: ${FIXED_PKG}/" .debmerge/DEBIAN/control
 
-          rm "$HDR"
-          dpkg-deb --root-owner-group --build .debmerge "$IMG"
+          # 补充 Provides（原来的 headers 包名）
+          HDRPKG=$(dpkg-deb -f "$HDR" Package)
+          if grep -q '^Provides:' .debmerge/DEBIAN/control; then
+            sed -i "s/^Provides:.*/Provides: ${HDRPKG}/" .debmerge/DEBIAN/control
+          else
+            sed -i "/^Description:/i Provides: ${HDRPKG}" .debmerge/DEBIAN/control
+          fi
+
+          # 重新打包，文件名也用固定包名
+          NEW_DEB="../${FIXED_PKG}_${REAL_VER}_amd64.deb"
+          dpkg-deb --root-owner-group --build .debmerge "$NEW_DEB"
+          rm -f "$IMG" "$HDR"
           rm -rf .debmerge .debhdr
-          ls -l ../*.deb
+
+          echo "生成固定包名 deb:"
+          ls -l "$NEW_DEB"
+          dpkg-deb -f "$NEW_DEB" Package Version Architecture Provides
 
       - name: Collect artifacts
         run: |
           mkdir -p out
-          cp ./*linux-image*${{ env.KVER }}*.deb out/ 2>/dev/null || cp ./*linux-image*.deb out/
+          # 固定包名后直接匹配
+          cp ./*${{ env.FIXED_PKG }}*.deb out/ 2>/dev/null || cp ./*linux-image*.deb out/
           ls -l out/
 
       - name: Release
