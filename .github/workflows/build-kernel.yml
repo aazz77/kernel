@@ -6,7 +6,7 @@ on:
       version:
         description: "Kernel version (留空则用默认 7.2.8, 无条件构建)"
         required: false
-        default: '7.3'
+        default: '7.2.13'
         type: string
       kernel_sign:
         description: 'LOCALVERSION 后缀(可留空)'
@@ -28,7 +28,7 @@ permissions:
   contents: write
 
 env:
-  MAJOR: "7.3"   # ★ 定时检测跟踪的大版本号, 改这里即可
+  MAJOR: "7.2"   # ★ 定时检测跟踪的大版本号, 改这里即可
   FIXED_PKG: "linux-kernel-amd64"   # ★ 固定包名，以后升级都用这个
 
 jobs:
