@@ -124,7 +124,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential debhelper bc bison flex \
             libssl-dev libelf-dev libdw-dev dwarves kmod cpio zstd lz4 \
-            dpkg-dev fakeroot openssl jq
+            dpkg-dev fakeroot openssl jq ccache
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          # 按 profile + 大版本缓存, 同系列配置微调可命中
+          key: kernel-${{ env.PROFILE }}-${{ env.MAJOR }}-${{ env.KVERSION }}
+          restore-keys: |
+            kernel-${{ env.PROFILE }}-${{ env.MAJOR }}-
+            kernel-${{ env.PROFILE }}-
+            kernel-
+          max-size: 2G
+          verbose: 1
 
       - name: Configure kernel (Debian base + profile fragment)
         working-directory: linux
@@ -182,10 +194,20 @@ jobs:
       - name: Build bzImage + modules + deb packages (bindeb-pkg)
         working-directory: linux
         run: |
+          export PATH="/usr/lib/ccache:$PATH"
+          export CC="ccache gcc"
+          export CXX="ccache g++"
+          ccache -z || true
+          ccache -s || true
+
           KVER=$(make kernelrelease LOCALVERSION=)
           echo "KVER=${KVER}" >> $GITHUB_ENV
           make -j"$(nproc)" LOCALVERSION= bindeb-pkg \
+            CC="ccache gcc" CXX="ccache g++" \
             KDEB_PKGVERSION="${KVER}-1" DPKG_FLAGS="-d"
+
+          echo "== ccache stats =="
+          ccache -s || true
           ls -l ../*.deb
 
       - name: Merge headers into image deb (合成单包 + 按 profile 命名)
