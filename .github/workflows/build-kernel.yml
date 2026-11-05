@@ -270,14 +270,8 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          # ★ 按 profile 分 tag, 互不覆盖
-          tag_name: kernel-x64-${{ env.PROFILE }}
-          name: kernel ${{ env.KVER }} (${{ env.PROFILE }})
-          body: |
-            - Profile: `${{ env.PROFILE }}`
-            - Version: `${{ env.KVER }}`
-            - Package: `${{ env.FIXED_PKG }}`
-            - LOCALVERSION: `-${{ env.SIGN }}`
+
+          tag_name: kernel-x64
           files: |
             out/*
           overwrite_files: true
