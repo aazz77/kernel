@@ -3,17 +3,18 @@
 # 只会禁用 base config 中实际存在的符号; 删掉某行后重新运行
 # gen-slim-fragment.py 即可恢复该类功能。
 #
-# 前提假设: x86_64 桌面物理机, 无 TV 卡/触摸屏/USB Gadget/Waydroid。
-# 保留: ext4/btrfs/xfs/vfat/exfat/ntfs3/fuse/squashfs/udf, NFS/CIFS, KVM,
-#       HDA+USB 声卡, USB 摄像头(UVC), Intel/Realtek/MediaTek/Atheros 常见网卡。
+# 前提假设: x86_64 KVM/QEMU guest, 磁盘 virtio, 网卡 virtio, headless。
+# 保留: ext4, FUSE/OVERLAY/SQUASHFS, IPv6, virtio 全家(内建),
+#       NETFILTER, cgroup/namespace, BPF, AppArmor 等基础能力。
 
 # ===== 调试信息(构建时间大头) =====
-# DEBUG_INFO_NONE=y 在生成器的 OVERRIDES 里固定写入, 此处无需列
+# DEBUG_INFO_NONE=y 在生成器的 OVERRIDES 里固定写入
 
-# ===== 虚拟化: 只保留 KVM host, 砍 Xen guest/backend =====
+# ===== 虚拟化: 只保留 KVM guest, 砍 Xen =====
 XEN*
 
-# ===== 媒体: 只留 USB 摄像头, 砍 PCI/平台 TV 卡、DVB、模拟电视、SDR、收音机、红外遥控 =====
+# ===== 媒体整砍 =====
+MEDIA_SUPPORT
 MEDIA_PCI_SUPPORT
 MEDIA_PLATFORM_SUPPORT
 MEDIA_TEST_SUPPORT
@@ -26,10 +27,11 @@ RADIO_ADAPTERS
 RC_CORE
 CAN*
 
-# ===== 声卡: 砍 SoC codec 驱动(桌面无用), 留 HDA/USB =====
+# ===== 声卡整砍 =====
+SOUND
 SND_SOC*
 
-# ===== 文件系统: 砍冷门/集群 FS, 留常用 + NFS/CIFS =====
+# ===== 文件系统: 砍冷门/集群 + 用户要求砍的网络FS/软RAID等 =====
 ADFS_FS
 AFFS_FS
 AFS_FS
@@ -57,11 +59,22 @@ CRAMFS
 GFS2_FS
 OCFS2_FS
 CEPH_LIB
+CEPH_FS
 SMB_SERVER
-# MTD/UBI/JFFS2: 桌面 x86 无 SPI NOR 直访需求
+NFS_FS
+CIFS
+BTRFS_FS
+XFS_FS
+F2FS_FS
+# MTD
 MTD*
+# 软 RAID
+MD
+BLK_DEV_MD
+# 磁盘加密
+DM_CRYPT
 
-# ===== 企业级网络/存储(iSCSI offload、FC HBA、RDMA、Zigbee、NFC、老串口线) =====
+# ===== 企业级网络/存储 =====
 INFINIBAND*
 BE2ISCSI
 BNX2ISCSI
@@ -84,7 +97,7 @@ ISDN*
 SLIP
 IPMI*
 
-# ===== 桌面用不到的大块头 =====
+# ===== 大块头 =====
 STAGING
 IIO
 INPUT_TOUCHSCREEN
@@ -94,20 +107,7 @@ ANDROID_BINDER_IPC*
 DRM_GMA500
 KUNIT*
 
-# ===== 显式设置(设值行, 含 = 生效) =====
-# THP 改为 madvise 模式(Debian 官方是 always)
-CONFIG_TRANSPARENT_HUGEPAGE=y
-CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
-CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=n
-
-# ============================================================
-# 以下为 KVM guest 附加项(在桌面精简基础上叠加)
-# 假设: 跑在 KVM/QEMU 里, 磁盘 virtio, 网卡 virtio(或 e1000 模拟),
-#      显卡 virtio-gpu, 音频 intel-hda 模拟或 virtio-sound
-# ============================================================
-
-# 内核本身是 guest: 不要 hypervisor host 能力(精确列出, 避免 KVM* 误伤 KVM_GUEST)
-# 注意: 不能用 HYPERV* 前缀 — 会误伤 CONFIG_HYPERVISOR_GUEST, 连坐关掉 PARAVIRT/KVM_GUEST
+# ===== guest: 不要 hypervisor host =====
 KVM
 KVM_INTEL
 KVM_AMD
@@ -122,48 +122,93 @@ HYPERV_STORAGE
 HYPERV_UTILS
 HYPERV_BALLOON
 
-# 显卡: 只留 virtio-gpu, 砍物理 GPU 驱动
+# ===== 显卡: 只留 virtio-gpu =====
 DRM_I915
 DRM_XE
 DRM_AMDGPU*
 DRM_NOUVEAU*
 DRM_VMW*
 
-# 无线/蓝牙: guest 无物理射频
+# ===== 无线/蓝牙 =====
 WLAN_VENDOR_*
-BT*
+WIRELESS
+CFG80211
+MAC80211
+BT
+BT_*
 
-# SATA/AHCI: 磁盘一律 virtio-blk / virtio-scsi(如需 SATA 模拟盘删掉下面几行)
+# ===== SATA/AHCI =====
 ATA
 ATA_*
 SATA_*
 PATA_*
 AHCI_*
 
-# headless 无桌面环境: 音频整棵砍掉(SOUND 关了 SND_* 全部失效)
-SOUND
+# ===== USB 全家(用户要求砍, 无 U 盘/USB 键鼠直通) =====
+USB
+USB_SUPPORT
+USB_XHCI_HCD
+USB_EHCI_HCD
+USB_OHCI_HCD
+USB_UHCI_HCD
+USB_STORAGE
+USB_UAS
+USB_HID
+USB_PRINTER
+USB_MON
+USB_ANNOUNCE_NEW_DEVICES
 
-# 媒体采集: 无桌面, 摄像头/采集卡/DVB 全部不需要
-# (要 USB 摄像头直通给 VM 用, 删掉这行即可恢复 UVC)
-MEDIA_SUPPORT
-
-# headless 用不到的外设
-PARPORT
-GAMEPORT
+# ===== 输入(纯 SSH, 砍键鼠) =====
+HID
+INPUT_MOUSEDEV
+INPUT_MOUSE
 INPUT_JOYDEV
+KEYBOARD_ATKBD
+GAMEPORT
+
+# ===== 控制台/帧缓冲(纯 SSH) =====
+FRAMEBUFFER_CONSOLE
+VGA_CONSOLE
+LOGO
+FB_EFI
+# 注意: 保留 DRM=y + DRM_VIRTIO_GPU 供 virtio-gpu, 但关掉文本 FB 控制台
+
+# ===== 外设 =====
+PARPORT
 FIREWIRE
 AGP
 MMC*
-USB_PRINTER
 
-# ---- guest 显式设置(核心驱动内建, 不依赖 initramfs 时序) ----
-# guest 身份链显式钉死: HYPERVISOR_GUEST → PARAVIRT → KVM_GUEST(默认 y 但依赖前两者)
-HYPERVISOR_GUEST=y
+# ===== 崩溃转储 / kexec =====
+KEXEC
+KEXEC_FILE
+CRASH_DUMP
+CRASH_RESERVE
+CRASH_HOTPLUG
+
+# ===== 调试/分析 =====
+PROFILING
+PERF_EVENTS
+PERF_EVENTS_INTEL_UNCORE
+PERF_EVENTS_INTEL_RAPL
+PERF_EVENTS_INTEL_CSTATE
+PERF_EVENTS_AMD_POWER
+PERF_EVENTS_AMD_UNCORE
+DEBUG_FS
+MAGIC_SYSRQ
+KPROBES
+UPROBES
+FTRACE
+FUNCTION_TRACER
+FUNCTION_GRAPH_TRACER
+STACK_TRACER
+BLK_DEV_IO_TRACE
+
 PARAVIRT=y
 KVM_GUEST=y
 PARAVIRT_SPINLOCKS=y
-# 注意: kconfig 不会自动把依赖升级为 y, base 里 DRM/SCSI 是 =m,
-# 必须先把核心子系统拉成 =y, 否则 VIRTIO_GPU/SCSI_VIRTIO 会被静默降回 =m
+
+# 核心驱动内建
 DRM=y
 SCSI=y
 VIRTIO_BLK=y
@@ -174,3 +219,9 @@ VIRTIO_INPUT=y
 HW_RANDOM_VIRTIO=y
 DRM_VIRTIO_GPU=y
 FW_CFG_SYSFS=y
+
+# 明确保留(用户要求)
+# FUSE_FS / OVERLAY_FS / SQUASHFS / IPV6 不在禁用列表里, 保持 base 原样
+
+# ===== 网络虚拟化: 保留 TUN/BRIDGE 等(NAT/容器/VPN 常用) =====
+# BRIDGE TUN VETH VLAN MACVLAN 等不禁用, 保持 base 原样

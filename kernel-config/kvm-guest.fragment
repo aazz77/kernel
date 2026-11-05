@@ -1,6 +1,6 @@
 # kvm-guest.fragment — x64 Debian 13 精简
 # 由 gen-slim-fragment.py 自动生成, 精简项定义见 kvm-guest-patterns.txt
-# base: config-7.1.8+deb13-amd64 (启用符号 7026, 禁用 724)
+# base: base.config (启用符号 7026, 禁用 771)
 
 # ---- 固定覆盖 ----
 CONFIG_DEBUG_INFO_NONE=y
@@ -52,12 +52,19 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_BFS_FS] (1) ----
 # CONFIG_BFS_FS is not set
 
-# ---- [CONFIG_BT*] (56) ----
+# ---- [CONFIG_BLK_DEV_IO_TRACE] (1) ----
+# CONFIG_BLK_DEV_IO_TRACE is not set
+
+# ---- [CONFIG_BLK_DEV_MD] (1) ----
+# CONFIG_BLK_DEV_MD is not set
+
+# ---- [CONFIG_BT] (1) ----
 # CONFIG_BT is not set
-# CONFIG_BTREE is not set
+
+# ---- [CONFIG_BTRFS_FS] (1) ----
 # CONFIG_BTRFS_FS is not set
-# CONFIG_BTRFS_FS_POSIX_ACL is not set
-# CONFIG_BTT is not set
+
+# ---- [CONFIG_BT_*] (51) ----
 # CONFIG_BT_6LOWPAN is not set
 # CONFIG_BT_ATH3K is not set
 # CONFIG_BT_BCM is not set
@@ -149,8 +156,32 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_CAN_VCAN is not set
 # CONFIG_CAN_VXCAN is not set
 
+# ---- [CONFIG_CEPH_FS] (1) ----
+# CONFIG_CEPH_FS is not set
+
 # ---- [CONFIG_CEPH_LIB] (1) ----
 # CONFIG_CEPH_LIB is not set
+
+# ---- [CONFIG_CFG80211] (1) ----
+# CONFIG_CFG80211 is not set
+
+# ---- [CONFIG_CIFS] (1) ----
+# CONFIG_CIFS is not set
+
+# ---- [CONFIG_CRASH_DUMP] (1) ----
+# CONFIG_CRASH_DUMP is not set
+
+# ---- [CONFIG_CRASH_HOTPLUG] (1) ----
+# CONFIG_CRASH_HOTPLUG is not set
+
+# ---- [CONFIG_CRASH_RESERVE] (1) ----
+# CONFIG_CRASH_RESERVE is not set
+
+# ---- [CONFIG_DEBUG_FS] (1) ----
+# CONFIG_DEBUG_FS is not set
+
+# ---- [CONFIG_DM_CRYPT] (1) ----
+# CONFIG_DM_CRYPT is not set
 
 # ---- [CONFIG_DRM_AMDGPU*] (4) ----
 # CONFIG_DRM_AMDGPU is not set
@@ -185,11 +216,29 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_EROFS_FS] (1) ----
 # CONFIG_EROFS_FS is not set
 
+# ---- [CONFIG_F2FS_FS] (1) ----
+# CONFIG_F2FS_FS is not set
+
+# ---- [CONFIG_FB_EFI] (1) ----
+# CONFIG_FB_EFI is not set
+
 # ---- [CONFIG_FCOE] (1) ----
 # CONFIG_FCOE is not set
 
 # ---- [CONFIG_FIREWIRE] (1) ----
 # CONFIG_FIREWIRE is not set
+
+# ---- [CONFIG_FRAMEBUFFER_CONSOLE] (1) ----
+# CONFIG_FRAMEBUFFER_CONSOLE is not set
+
+# ---- [CONFIG_FTRACE] (1) ----
+# CONFIG_FTRACE is not set
+
+# ---- [CONFIG_FUNCTION_GRAPH_TRACER] (1) ----
+# CONFIG_FUNCTION_GRAPH_TRACER is not set
+
+# ---- [CONFIG_FUNCTION_TRACER] (1) ----
+# CONFIG_FUNCTION_TRACER is not set
 
 # ---- [CONFIG_GAMEPORT] (1) ----
 # CONFIG_GAMEPORT is not set
@@ -202,6 +251,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 
 # ---- [CONFIG_HFS_FS] (1) ----
 # CONFIG_HFS_FS is not set
+
+# ---- [CONFIG_HID] (1) ----
+# CONFIG_HID is not set
 
 # ---- [CONFIG_HPFS_FS] (1) ----
 # CONFIG_HPFS_FS is not set
@@ -282,6 +334,12 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_INPUT_JOYDEV] (1) ----
 # CONFIG_INPUT_JOYDEV is not set
 
+# ---- [CONFIG_INPUT_MOUSE] (1) ----
+# CONFIG_INPUT_MOUSE is not set
+
+# ---- [CONFIG_INPUT_MOUSEDEV] (1) ----
+# CONFIG_INPUT_MOUSEDEV is not set
+
 # ---- [CONFIG_INPUT_TOUCHSCREEN] (1) ----
 # CONFIG_INPUT_TOUCHSCREEN is not set
 
@@ -298,6 +356,18 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_JFS_FS] (1) ----
 # CONFIG_JFS_FS is not set
 
+# ---- [CONFIG_KEXEC] (1) ----
+# CONFIG_KEXEC is not set
+
+# ---- [CONFIG_KEXEC_FILE] (1) ----
+# CONFIG_KEXEC_FILE is not set
+
+# ---- [CONFIG_KEYBOARD_ATKBD] (1) ----
+# CONFIG_KEYBOARD_ATKBD is not set
+
+# ---- [CONFIG_KPROBES] (1) ----
+# CONFIG_KPROBES is not set
+
 # ---- [CONFIG_KVM] (1) ----
 # CONFIG_KVM is not set
 
@@ -312,6 +382,15 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 
 # ---- [CONFIG_LIBFCOE] (1) ----
 # CONFIG_LIBFCOE is not set
+
+# ---- [CONFIG_MAC80211] (1) ----
+# CONFIG_MAC80211 is not set
+
+# ---- [CONFIG_MAGIC_SYSRQ] (1) ----
+# CONFIG_MAGIC_SYSRQ is not set
+
+# ---- [CONFIG_MD] (1) ----
+# CONFIG_MD is not set
 
 # ---- [CONFIG_MEDIA_ANALOG_TV_SUPPORT] (1) ----
 # CONFIG_MEDIA_ANALOG_TV_SUPPORT is not set
@@ -443,6 +522,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_NFC_PORT100 is not set
 # CONFIG_NFC_SIM is not set
 
+# ---- [CONFIG_NFS_FS] (1) ----
+# CONFIG_NFS_FS is not set
+
 # ---- [CONFIG_NTFS_FS] (1) ----
 # CONFIG_NTFS_FS is not set
 
@@ -492,6 +574,27 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_PATA_TOSHIBA is not set
 # CONFIG_PATA_TRIFLEX is not set
 # CONFIG_PATA_VIA is not set
+
+# ---- [CONFIG_PERF_EVENTS] (1) ----
+# CONFIG_PERF_EVENTS is not set
+
+# ---- [CONFIG_PERF_EVENTS_AMD_POWER] (1) ----
+# CONFIG_PERF_EVENTS_AMD_POWER is not set
+
+# ---- [CONFIG_PERF_EVENTS_AMD_UNCORE] (1) ----
+# CONFIG_PERF_EVENTS_AMD_UNCORE is not set
+
+# ---- [CONFIG_PERF_EVENTS_INTEL_CSTATE] (1) ----
+# CONFIG_PERF_EVENTS_INTEL_CSTATE is not set
+
+# ---- [CONFIG_PERF_EVENTS_INTEL_RAPL] (1) ----
+# CONFIG_PERF_EVENTS_INTEL_RAPL is not set
+
+# ---- [CONFIG_PERF_EVENTS_INTEL_UNCORE] (1) ----
+# CONFIG_PERF_EVENTS_INTEL_UNCORE is not set
+
+# ---- [CONFIG_PROFILING] (1) ----
+# CONFIG_PROFILING is not set
 
 # ---- [CONFIG_QEDI] (1) ----
 # CONFIG_QEDI is not set
@@ -795,6 +898,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_SOUND] (1) ----
 # CONFIG_SOUND is not set
 
+# ---- [CONFIG_STACK_TRACER] (1) ----
+# CONFIG_STACK_TRACER is not set
+
 # ---- [CONFIG_STAGING] (1) ----
 # CONFIG_STAGING is not set
 
@@ -853,14 +959,56 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_UFS_FS] (1) ----
 # CONFIG_UFS_FS is not set
 
+# ---- [CONFIG_UPROBES] (1) ----
+# CONFIG_UPROBES is not set
+
+# ---- [CONFIG_USB] (1) ----
+# CONFIG_USB is not set
+
+# ---- [CONFIG_USB_ANNOUNCE_NEW_DEVICES] (1) ----
+# CONFIG_USB_ANNOUNCE_NEW_DEVICES is not set
+
+# ---- [CONFIG_USB_EHCI_HCD] (1) ----
+# CONFIG_USB_EHCI_HCD is not set
+
 # ---- [CONFIG_USB_GADGET] (1) ----
 # CONFIG_USB_GADGET is not set
+
+# ---- [CONFIG_USB_HID] (1) ----
+# CONFIG_USB_HID is not set
+
+# ---- [CONFIG_USB_MON] (1) ----
+# CONFIG_USB_MON is not set
+
+# ---- [CONFIG_USB_OHCI_HCD] (1) ----
+# CONFIG_USB_OHCI_HCD is not set
 
 # ---- [CONFIG_USB_PRINTER] (1) ----
 # CONFIG_USB_PRINTER is not set
 
+# ---- [CONFIG_USB_STORAGE] (1) ----
+# CONFIG_USB_STORAGE is not set
+
+# ---- [CONFIG_USB_SUPPORT] (1) ----
+# CONFIG_USB_SUPPORT is not set
+
+# ---- [CONFIG_USB_UAS] (1) ----
+# CONFIG_USB_UAS is not set
+
+# ---- [CONFIG_USB_UHCI_HCD] (1) ----
+# CONFIG_USB_UHCI_HCD is not set
+
+# ---- [CONFIG_USB_XHCI_HCD] (1) ----
+# CONFIG_USB_XHCI_HCD is not set
+
+# ---- [CONFIG_VGA_CONSOLE] (1) ----
+# CONFIG_VGA_CONSOLE is not set
+
 # ---- [CONFIG_VXFS_FS] (1) ----
 # CONFIG_VXFS_FS is not set
+
+# ---- [CONFIG_WIRELESS] (1) ----
+# CONFIG_WIRELESS is not set
 
 # ---- [CONFIG_WLAN_VENDOR_*] (17) ----
 # CONFIG_WLAN_VENDOR_ADMTEK is not set
@@ -928,11 +1076,10 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_XEN_WDT is not set
 # CONFIG_XEN_XENBUS_FRONTEND is not set
 
+# ---- [CONFIG_XFS_FS] (1) ----
+# CONFIG_XFS_FS is not set
+
 # ---- 显式设置(来自 patterns 设值行, 最后生效) ----
-CONFIG_TRANSPARENT_HUGEPAGE=y
-CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
-# CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS is not set
-CONFIG_HYPERVISOR_GUEST=y
 CONFIG_PARAVIRT=y
 CONFIG_KVM_GUEST=y
 CONFIG_PARAVIRT_SPINLOCKS=y
