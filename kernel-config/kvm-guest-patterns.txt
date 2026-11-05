@@ -4,16 +4,16 @@
 # gen-slim-fragment.py 即可恢复该类功能。
 #
 # 前提假设: x86_64 KVM/QEMU guest, 磁盘 virtio, 网卡 virtio, headless。
-# 保留: ext4, FUSE/OVERLAY/SQUASHFS, IPv6, virtio 全家(内建),
-#       NETFILTER, cgroup/namespace, BPF, AppArmor 等基础能力。
+# 保留: ext4, FUSE/OVERLAY/SQUASHFS, IPv6, TUN/BRIDGE/VETH/VLAN,
+#       virtio 全家(内建), NETFILTER, cgroup/namespace, BPF, AppArmor。
 
-# ===== 调试信息(构建时间大头) =====
-# DEBUG_INFO_NONE=y 在生成器的 OVERRIDES 里固定写入
+# ===== 调试信息 =====
+# DEBUG_INFO_NONE=y 在生成器 OVERRIDES 里固定写入
 
-# ===== 虚拟化: 只保留 KVM guest, 砍 Xen =====
+# ===== Xen =====
 XEN*
 
-# ===== 媒体整砍 =====
+# ===== 媒体 =====
 MEDIA_SUPPORT
 MEDIA_PCI_SUPPORT
 MEDIA_PLATFORM_SUPPORT
@@ -27,11 +27,11 @@ RADIO_ADAPTERS
 RC_CORE
 CAN*
 
-# ===== 声卡整砍 =====
+# ===== 声卡 =====
 SOUND
 SND_SOC*
 
-# ===== 文件系统: 砍冷门/集群 + 用户要求砍的网络FS/软RAID等 =====
+# ===== 文件系统 =====
 ADFS_FS
 AFFS_FS
 AFS_FS
@@ -66,15 +66,22 @@ CIFS
 BTRFS_FS
 XFS_FS
 F2FS_FS
-# MTD
 MTD*
-# 软 RAID
 MD
 BLK_DEV_MD
-# 磁盘加密
 DM_CRYPT
+# FAT/ISO/UDF 等(一类继续砍)
+ISO9660_FS
+UDF_FS
+MSDOS_FS
+VFAT_FS
+EXFAT_FS
+NTFS3_FS
+CDROM
+BLK_DEV_RAM
+BLK_DEV_NBD
 
-# ===== 企业级网络/存储 =====
+# ===== 企业网络/存储 =====
 INFINIBAND*
 BE2ISCSI
 BNX2ISCSI
@@ -107,7 +114,7 @@ ANDROID_BINDER_IPC*
 DRM_GMA500
 KUNIT*
 
-# ===== guest: 不要 hypervisor host =====
+# ===== guest: 不要 host 能力 =====
 KVM
 KVM_INTEL
 KVM_AMD
@@ -122,7 +129,7 @@ HYPERV_STORAGE
 HYPERV_UTILS
 HYPERV_BALLOON
 
-# ===== 显卡: 只留 virtio-gpu =====
+# ===== 物理 GPU =====
 DRM_I915
 DRM_XE
 DRM_AMDGPU*
@@ -136,15 +143,16 @@ CFG80211
 MAC80211
 BT
 BT_*
+RFKILL
 
-# ===== SATA/AHCI =====
+# ===== SATA =====
 ATA
 ATA_*
 SATA_*
 PATA_*
 AHCI_*
 
-# ===== USB 全家(用户要求砍, 无 U 盘/USB 键鼠直通) =====
+# ===== USB 全家 =====
 USB
 USB_SUPPORT
 USB_XHCI_HCD
@@ -158,7 +166,7 @@ USB_PRINTER
 USB_MON
 USB_ANNOUNCE_NEW_DEVICES
 
-# ===== 输入(纯 SSH, 砍键鼠) =====
+# ===== 输入 =====
 HID
 INPUT_MOUSEDEV
 INPUT_MOUSE
@@ -166,12 +174,13 @@ INPUT_JOYDEV
 KEYBOARD_ATKBD
 GAMEPORT
 
-# ===== 控制台/帧缓冲(纯 SSH) =====
+# ===== 控制台/帧缓冲 + VT =====
 FRAMEBUFFER_CONSOLE
 VGA_CONSOLE
 LOGO
 FB_EFI
-# 注意: 保留 DRM=y + DRM_VIRTIO_GPU 供 virtio-gpu, 但关掉文本 FB 控制台
+VT
+VT_CONSOLE
 
 # ===== 外设 =====
 PARPORT
@@ -179,7 +188,7 @@ FIREWIRE
 AGP
 MMC*
 
-# ===== 崩溃转储 / kexec =====
+# ===== kexec / crash =====
 KEXEC
 KEXEC_FILE
 CRASH_DUMP
@@ -203,12 +212,44 @@ FUNCTION_TRACER
 FUNCTION_GRAPH_TRACER
 STACK_TRACER
 BLK_DEV_IO_TRACE
+SCHEDSTATS
+DETECT_HUNG_TASK
+SOFTLOCKUP_DETECTOR
+HARDLOCKUP_DETECTOR
 
+# ===== 安全: 只留 AppArmor, 其余 LSM 砍掉 =====
+SECURITY_SELINUX
+SECURITY_TOMOYO
+IMA
+EVM
+# SECURITY_APPARMOR 保留
+# SECURITY_LANDLOCK / YAMA 可留作补充, 体积小; 若要极致可再砍
+SECURITY_LANDLOCK
+SECURITY_YAMA
+
+# ===== 休眠 =====
+HIBERNATION
+SUSPEND
+
+# ===== 用不到的网络协议 =====
+IP_PIMSM_V1
+IP_PIMSM_V2
+IP_MROUTE
+BATMAN_ADV
+L2TP
+OPENVSWITCH
+BINFMT_MISC
+
+# ===== 显式设置 =====
+CONFIG_TRANSPARENT_HUGEPAGE=y
+CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
+CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=n
+
+HYPERVISOR_GUEST=y
 PARAVIRT=y
 KVM_GUEST=y
 PARAVIRT_SPINLOCKS=y
 
-# 核心驱动内建
 DRM=y
 SCSI=y
 VIRTIO_BLK=y
@@ -220,8 +261,4 @@ HW_RANDOM_VIRTIO=y
 DRM_VIRTIO_GPU=y
 FW_CFG_SYSFS=y
 
-# 明确保留(用户要求)
-# FUSE_FS / OVERLAY_FS / SQUASHFS / IPV6 不在禁用列表里, 保持 base 原样
-
-# ===== 网络虚拟化: 保留 TUN/BRIDGE 等(NAT/容器/VPN 常用) =====
-# BRIDGE TUN VETH VLAN MACVLAN 等不禁用, 保持 base 原样
+# 保留: FUSE/OVERLAY/SQUASHFS, IPV6, TUN/BRIDGE/VETH/VLAN/MACVLAN, AppArmor, Netfilter, BPF, cgroup

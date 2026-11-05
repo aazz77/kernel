@@ -1,6 +1,6 @@
 # kvm-guest.fragment — x64 Debian 13 精简
 # 由 gen-slim-fragment.py 自动生成, 精简项定义见 kvm-guest-patterns.txt
-# base: base.config (启用符号 7026, 禁用 771)
+# base: base.config (启用符号 6815, 禁用 792)
 
 # ---- 固定覆盖 ----
 CONFIG_DEBUG_INFO_NONE=y
@@ -43,6 +43,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_ATA_SFF is not set
 # CONFIG_ATA_VERBOSE_ERROR is not set
 
+# ---- [CONFIG_BATMAN_ADV] (1) ----
+# CONFIG_BATMAN_ADV is not set
+
 # ---- [CONFIG_BE2ISCSI] (1) ----
 # CONFIG_BE2ISCSI is not set
 
@@ -52,11 +55,20 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_BFS_FS] (1) ----
 # CONFIG_BFS_FS is not set
 
+# ---- [CONFIG_BINFMT_MISC] (1) ----
+# CONFIG_BINFMT_MISC is not set
+
 # ---- [CONFIG_BLK_DEV_IO_TRACE] (1) ----
 # CONFIG_BLK_DEV_IO_TRACE is not set
 
 # ---- [CONFIG_BLK_DEV_MD] (1) ----
 # CONFIG_BLK_DEV_MD is not set
+
+# ---- [CONFIG_BLK_DEV_NBD] (1) ----
+# CONFIG_BLK_DEV_NBD is not set
+
+# ---- [CONFIG_BLK_DEV_RAM] (1) ----
+# CONFIG_BLK_DEV_RAM is not set
 
 # ---- [CONFIG_BT] (1) ----
 # CONFIG_BT is not set
@@ -156,6 +168,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_CAN_VCAN is not set
 # CONFIG_CAN_VXCAN is not set
 
+# ---- [CONFIG_CDROM] (1) ----
+# CONFIG_CDROM is not set
+
 # ---- [CONFIG_CEPH_FS] (1) ----
 # CONFIG_CEPH_FS is not set
 
@@ -179,6 +194,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 
 # ---- [CONFIG_DEBUG_FS] (1) ----
 # CONFIG_DEBUG_FS is not set
+
+# ---- [CONFIG_DETECT_HUNG_TASK] (1) ----
+# CONFIG_DETECT_HUNG_TASK is not set
 
 # ---- [CONFIG_DM_CRYPT] (1) ----
 # CONFIG_DM_CRYPT is not set
@@ -216,6 +234,12 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_EROFS_FS] (1) ----
 # CONFIG_EROFS_FS is not set
 
+# ---- [CONFIG_EVM] (1) ----
+# CONFIG_EVM is not set
+
+# ---- [CONFIG_EXFAT_FS] (1) ----
+# CONFIG_EXFAT_FS is not set
+
 # ---- [CONFIG_F2FS_FS] (1) ----
 # CONFIG_F2FS_FS is not set
 
@@ -246,11 +270,17 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_GFS2_FS] (1) ----
 # CONFIG_GFS2_FS is not set
 
+# ---- [CONFIG_HARDLOCKUP_DETECTOR] (1) ----
+# CONFIG_HARDLOCKUP_DETECTOR is not set
+
 # ---- [CONFIG_HFSPLUS_FS] (1) ----
 # CONFIG_HFSPLUS_FS is not set
 
 # ---- [CONFIG_HFS_FS] (1) ----
 # CONFIG_HFS_FS is not set
+
+# ---- [CONFIG_HIBERNATION] (1) ----
+# CONFIG_HIBERNATION is not set
 
 # ---- [CONFIG_HID] (1) ----
 # CONFIG_HID is not set
@@ -304,6 +334,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_IIO] (1) ----
 # CONFIG_IIO is not set
 
+# ---- [CONFIG_IMA] (1) ----
+# CONFIG_IMA is not set
+
 # ---- [CONFIG_INFINIBAND*] (25) ----
 # CONFIG_INFINIBAND is not set
 # CONFIG_INFINIBAND_ADDR_TRANS is not set
@@ -353,6 +386,18 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_IPMI_SSIF is not set
 # CONFIG_IPMI_WATCHDOG is not set
 
+# ---- [CONFIG_IP_MROUTE] (1) ----
+# CONFIG_IP_MROUTE is not set
+
+# ---- [CONFIG_IP_PIMSM_V1] (1) ----
+# CONFIG_IP_PIMSM_V1 is not set
+
+# ---- [CONFIG_IP_PIMSM_V2] (1) ----
+# CONFIG_IP_PIMSM_V2 is not set
+
+# ---- [CONFIG_ISO9660_FS] (1) ----
+# CONFIG_ISO9660_FS is not set
+
 # ---- [CONFIG_JFS_FS] (1) ----
 # CONFIG_JFS_FS is not set
 
@@ -376,6 +421,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 
 # ---- [CONFIG_KVM_INTEL] (1) ----
 # CONFIG_KVM_INTEL is not set
+
+# ---- [CONFIG_L2TP] (1) ----
+# CONFIG_L2TP is not set
 
 # ---- [CONFIG_LIBFC] (1) ----
 # CONFIG_LIBFC is not set
@@ -416,13 +464,12 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_MINIX_FS] (1) ----
 # CONFIG_MINIX_FS is not set
 
-# ---- [CONFIG_MMC*] (23) ----
+# ---- [CONFIG_MMC*] (22) ----
 # CONFIG_MMC is not set
 # CONFIG_MMC35240 is not set
 # CONFIG_MMCONF_FAM10H is not set
 # CONFIG_MMC_ALCOR is not set
 # CONFIG_MMC_BLOCK is not set
-# CONFIG_MMC_BLOCK_MINORS is not set
 # CONFIG_MMC_CB710 is not set
 # CONFIG_MMC_CQHCI is not set
 # CONFIG_MMC_REALTEK_PCI is not set
@@ -441,10 +488,11 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_MMC_VUB300 is not set
 # CONFIG_MMC_WBSD is not set
 
-# ---- [CONFIG_MTD*] (61) ----
+# ---- [CONFIG_MSDOS_FS] (1) ----
+# CONFIG_MSDOS_FS is not set
+
+# ---- [CONFIG_MTD*] (55) ----
 # CONFIG_MTD is not set
-# CONFIG_MTDRAM_ERASE_SIZE is not set
-# CONFIG_MTDRAM_TOTAL_SIZE is not set
 # CONFIG_MTD_ABSENT is not set
 # CONFIG_MTD_BLKDEVS is not set
 # CONFIG_MTD_BLOCK is not set
@@ -469,7 +517,6 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_MTD_NAND_CAFE is not set
 # CONFIG_MTD_NAND_CORE is not set
 # CONFIG_MTD_NAND_DISKONCHIP is not set
-# CONFIG_MTD_NAND_DISKONCHIP_PROBE_ADDRESS is not set
 # CONFIG_MTD_NAND_ECC is not set
 # CONFIG_MTD_NAND_ECC_SW_BCH is not set
 # CONFIG_MTD_NAND_ECC_SW_HAMMING is not set
@@ -488,7 +535,6 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_MTD_QINFO_PROBE is not set
 # CONFIG_MTD_RAM is not set
 # CONFIG_MTD_RAW_NAND is not set
-# CONFIG_MTD_REDBOOT_DIRECTORY_BLOCK is not set
 # CONFIG_MTD_REDBOOT_PARTS is not set
 # CONFIG_MTD_ROM is not set
 # CONFIG_MTD_SBC_GXX is not set
@@ -500,9 +546,7 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_MTD_SST25L is not set
 # CONFIG_MTD_SWAP is not set
 # CONFIG_MTD_UBI is not set
-# CONFIG_MTD_UBI_BEB_LIMIT is not set
 # CONFIG_MTD_UBI_BLOCK is not set
-# CONFIG_MTD_UBI_WL_THRESHOLD is not set
 
 # ---- [CONFIG_NET_9P] (1) ----
 # CONFIG_NET_9P is not set
@@ -533,6 +577,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 
 # ---- [CONFIG_OMFS_FS] (1) ----
 # CONFIG_OMFS_FS is not set
+
+# ---- [CONFIG_OPENVSWITCH] (1) ----
+# CONFIG_OPENVSWITCH is not set
 
 # ---- [CONFIG_ORANGEFS_FS] (1) ----
 # CONFIG_ORANGEFS_FS is not set
@@ -611,14 +658,16 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_RC_CORE] (1) ----
 # CONFIG_RC_CORE is not set
 
+# ---- [CONFIG_RFKILL] (1) ----
+# CONFIG_RFKILL is not set
+
 # ---- [CONFIG_ROMFS_FS] (1) ----
 # CONFIG_ROMFS_FS is not set
 
-# ---- [CONFIG_SATA_*] (18) ----
+# ---- [CONFIG_SATA_*] (17) ----
 # CONFIG_SATA_ACARD_AHCI is not set
 # CONFIG_SATA_AHCI is not set
 # CONFIG_SATA_HOST is not set
-# CONFIG_SATA_MOBILE_LPM_POLICY is not set
 # CONFIG_SATA_MV is not set
 # CONFIG_SATA_NV is not set
 # CONFIG_SATA_PMP is not set
@@ -633,6 +682,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_SATA_VIA is not set
 # CONFIG_SATA_VITESSE is not set
 # CONFIG_SATA_ZPODD is not set
+
+# ---- [CONFIG_SCHEDSTATS] (1) ----
+# CONFIG_SCHEDSTATS is not set
 
 # ---- [CONFIG_SCSI_BFA_FC] (1) ----
 # CONFIG_SCSI_BFA_FC is not set
@@ -654,6 +706,18 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 
 # ---- [CONFIG_SCSI_QLA_ISCSI] (1) ----
 # CONFIG_SCSI_QLA_ISCSI is not set
+
+# ---- [CONFIG_SECURITY_LANDLOCK] (1) ----
+# CONFIG_SECURITY_LANDLOCK is not set
+
+# ---- [CONFIG_SECURITY_SELINUX] (1) ----
+# CONFIG_SECURITY_SELINUX is not set
+
+# ---- [CONFIG_SECURITY_TOMOYO] (1) ----
+# CONFIG_SECURITY_TOMOYO is not set
+
+# ---- [CONFIG_SECURITY_YAMA] (1) ----
+# CONFIG_SECURITY_YAMA is not set
 
 # ---- [CONFIG_SLIP] (1) ----
 # CONFIG_SLIP is not set
@@ -895,6 +959,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_SND_SOC_TS3A227E is not set
 # CONFIG_SND_SOC_WM_ADSP is not set
 
+# ---- [CONFIG_SOFTLOCKUP_DETECTOR] (1) ----
+# CONFIG_SOFTLOCKUP_DETECTOR is not set
+
 # ---- [CONFIG_SOUND] (1) ----
 # CONFIG_SOUND is not set
 
@@ -903,6 +970,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 
 # ---- [CONFIG_STAGING] (1) ----
 # CONFIG_STAGING is not set
+
+# ---- [CONFIG_SUSPEND] (1) ----
+# CONFIG_SUSPEND is not set
 
 # ---- [CONFIG_TOUCHSCREEN*] (50) ----
 # CONFIG_TOUCHSCREEN_AD7877 is not set
@@ -956,6 +1026,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_TOUCHSCREEN_WM9713 is not set
 # CONFIG_TOUCHSCREEN_WM97XX is not set
 
+# ---- [CONFIG_UDF_FS] (1) ----
+# CONFIG_UDF_FS is not set
+
 # ---- [CONFIG_UFS_FS] (1) ----
 # CONFIG_UFS_FS is not set
 
@@ -1001,8 +1074,17 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # ---- [CONFIG_USB_XHCI_HCD] (1) ----
 # CONFIG_USB_XHCI_HCD is not set
 
+# ---- [CONFIG_VFAT_FS] (1) ----
+# CONFIG_VFAT_FS is not set
+
 # ---- [CONFIG_VGA_CONSOLE] (1) ----
 # CONFIG_VGA_CONSOLE is not set
+
+# ---- [CONFIG_VT] (1) ----
+# CONFIG_VT is not set
+
+# ---- [CONFIG_VT_CONSOLE] (1) ----
+# CONFIG_VT_CONSOLE is not set
 
 # ---- [CONFIG_VXFS_FS] (1) ----
 # CONFIG_VXFS_FS is not set
@@ -1029,7 +1111,7 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_WLAN_VENDOR_ST is not set
 # CONFIG_WLAN_VENDOR_ZYDAS is not set
 
-# ---- [CONFIG_XEN*] (45) ----
+# ---- [CONFIG_XEN*] (44) ----
 # CONFIG_XEN is not set
 # CONFIG_XENFS is not set
 # CONFIG_XEN_512GB is not set
@@ -1052,7 +1134,6 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_XEN_HAVE_PVMMU is not set
 # CONFIG_XEN_HAVE_VPMU is not set
 # CONFIG_XEN_MCE_LOG is not set
-# CONFIG_XEN_MEMORY_HOTPLUG_LIMIT is not set
 # CONFIG_XEN_NETDEV_BACKEND is not set
 # CONFIG_XEN_NETDEV_FRONTEND is not set
 # CONFIG_XEN_PCIDEV_BACKEND is not set
@@ -1080,6 +1161,10 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # CONFIG_XFS_FS is not set
 
 # ---- 显式设置(来自 patterns 设值行, 最后生效) ----
+CONFIG_TRANSPARENT_HUGEPAGE=y
+CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
+# CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS is not set
+CONFIG_HYPERVISOR_GUEST=y
 CONFIG_PARAVIRT=y
 CONFIG_KVM_GUEST=y
 CONFIG_PARAVIRT_SPINLOCKS=y

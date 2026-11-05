@@ -36,14 +36,18 @@ OVERRIDES = [
 
 
 def load_base(path):
-    """返回 base config 中启用的符号 {symbol: value}"""
+    """返回 base config 中 =y/=m 的符号 {symbol: value}
+    忽略整型/字符串选项, 避免对 SATA_MOBILE_LPM_POLICY、XEN_MEMORY_HOTPLUG_LIMIT
+    等生成非法的 '# CONFIG_X is not set'
+    """
     enabled = {}
     with open(path, encoding="utf-8", errors="replace") as f:
         for line in f:
             line = line.strip()
             if line.startswith("CONFIG_") and "=" in line:
                 k, v = line.split("=", 1)
-                enabled[k] = v
+                if v in ("y", "m"):
+                    enabled[k] = v
     return enabled
 
 
