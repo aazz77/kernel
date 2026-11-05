@@ -16,7 +16,7 @@ on:
       profile:
         description: '内核 profile'
         required: true
-        default: 'desktop'
+        default: 'kvm-guest'
         type: choice
         options:
           - desktop
